@@ -22,6 +22,13 @@ This repo: `cs-li-remote-hiring-watcher` -– LinkedIn Remote Job Scanner – Cl
 
 ---
 
+## 🚀 LinkedIn Scanner Task Board
+
+All the task-related details about everyone are documented in the Google sheet's link given below:
+
+https://docs.google.com/spreadsheets/d/1xkrC7jQNHkrERcOLLz6NBv8dCcfZvddP8IJqKJ3CuS4/edit?usp=sharing
+
+
 ## 🗂️ Repository Structure
 
 ```
