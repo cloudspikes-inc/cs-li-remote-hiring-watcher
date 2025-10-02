@@ -1,0 +1,21 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install deps
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt || pip install pytest black flake8 mypy pyyaml requests psycopg2-binary
+      - name: Lint
+        run: |
+          black --check .
+          flake8 .
+          mypy src || true
+      - name: Tests
+        run: pytest -q
+

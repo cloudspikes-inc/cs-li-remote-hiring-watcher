@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    container_name: li_scanner_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: li_scanner
+    ports: ["5432:5432"]
+    volumes: ["./postgres-data:/var/lib/postgresql/data"]
+  # Python app service optional for local development
+  app:
+    build: ./docker
+    container_name: li_scanner_app
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    depends_on:
+      - db
+    volumes:
+      - ./:/app
+    command: ["uv", "python", "src/scheduler/aps_scheduler.py"]
+# Note: The 'app' service is optional and primarily for local development.
+# To start the services, run: docker-compose up
+# To stop the services, run: docker-compose down 

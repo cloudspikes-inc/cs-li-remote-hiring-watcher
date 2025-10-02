@@ -1,0 +1,20 @@
+roles:
+  - "devops"
+  - "sre"
+  - "site reliability"
+  - "cloud engineer"
+  - "mlops"
+  - "dataops"
+  - "secops"
+  - "netops"
+remote:
+  - "remote"
+  - "work from home"
+  - "wfh"
+  - "distributed"
+exclude:
+  - "internship"
+  - "volunteer"
+  - "unpaid"
+  - "cloud kitchen"
+
