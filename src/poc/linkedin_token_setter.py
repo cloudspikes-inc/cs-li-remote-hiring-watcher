@@ -8,6 +8,7 @@ import requests
 AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization"
 TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
 
+
 class CodeCatcher(BaseHTTPRequestHandler):
     expected_state = ""
     result = {"code": None, "state_ok": False, "error": None}
@@ -29,7 +30,7 @@ class CodeCatcher(BaseHTTPRequestHandler):
         code = qs.get("code", [None])[0]
         state = qs.get("state", [None])[0]
         CodeCatcher.result["code"] = code
-        CodeCatcher.result["state_ok"] = (state == CodeCatcher.expected_state)
+        CodeCatcher.result["state_ok"] = state == CodeCatcher.expected_state
         self._send(200, "OK")
         CodeCatcher.done_event.set()
 
@@ -42,8 +43,10 @@ class CodeCatcher(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body.encode("utf-8"))
 
+
 def build_auth_url(client_id, redirect_uri, state, scopes):
     return f"{AUTH_URL}?{urlencode({'response_type': 'code', 'client_id': client_id, 'redirect_uri': redirect_uri, 'state': state, 'scope': scopes})}"
+
 
 def exchange_code_for_token(client_id, client_secret, redirect_uri, code):
     data = {
@@ -58,6 +61,7 @@ def exchange_code_for_token(client_id, client_secret, redirect_uri, code):
     if r.status_code != 200 or "access_token" not in body:
         sys.exit(f"Token exchange failed: {body}")
     return body
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -78,7 +82,10 @@ def main():
 
     auth_url = build_auth_url(args.client_id, args.redirect_uri, state, args.scopes)
     webbrowser.open(auth_url)
-    print(f"[INFO] Browser opened for LinkedIn consent. Waiting for redirect...", file=sys.stderr)
+    print(
+        f"[INFO] Browser opened for LinkedIn consent. Waiting for redirect...",
+        file=sys.stderr,
+    )
     if not CodeCatcher.done_event.wait(timeout=args.timeout):
         sys.exit("Timeout waiting for LinkedIn redirect")
 
@@ -87,7 +94,9 @@ def main():
     if not code:
         sys.exit("No authorization code captured from LinkedIn redirect.")
 
-    token = exchange_code_for_token(args.client_id, args.client_secret, args.redirect_uri, code)
+    token = exchange_code_for_token(
+        args.client_id, args.client_secret, args.redirect_uri, code
+    )
     access_token = token["access_token"]
     expires_in = token.get("expires_in", 0)
 
@@ -97,11 +106,15 @@ def main():
 
     # Pretty info goes to stderr so eval ignores it
     print(f"\n[INFO] Access token fetched successfully!", file=sys.stderr)
-    print(f"[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)", file=sys.stderr)
+    print(
+        f"[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)",
+        file=sys.stderr,
+    )
     print(f"[INFO] Expires on: {expiry_str}\n", file=sys.stderr)
 
     # Plain export only (stdout)
     print(f"export LI_TOKEN='{access_token}'")
+
 
 if __name__ == "__main__":
     main()
