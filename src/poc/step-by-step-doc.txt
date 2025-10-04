@@ -1,0 +1,31 @@
+# --- A) Configure (paste your own values)
+export LI_CLIENT_ID='78seural244bqk'
+export LI_CLIENT_SECRET='<YOUR_CLIENT_SECRET>'
+export LI_REDIRECT_URI='http://localhost/callback'     # must match your app exactly
+export LI_SCOPES='openid profile'                      # add 'email' if you want it
+export LI_STATE="state-$(openssl rand -hex 8)"
+
+# --- B) Open consent (login + allow)
+open "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LI_CLIENT_ID}&redirect_uri=${LI_REDIRECT_URI}&state=${LI_STATE}&scope=${LI_SCOPES}"
+
+# After approval, copy the ?code=... from the browser URL:
+export LI_CODE='<paste_the_code_here>'
+
+export LI_CODE='AQQSL_U9yOUxw66FnXhA8Qwx5a7qjF22YIVjzV1LtHR6bJ6BP7T1bQqofwawbw_g3DbDQpoOc-dwwQbgl69wWIuj3penwMynGL4iWcmfz6owiYp7pKEzcZsOBxwDYQ8Wv5pU2OPkF04YjuVMT3t8UGOjOCxLU6kuEjgNiuvYjX3AhTiRNFDeiJgs2Wes-DulEA06LsbUrvbpGdbyf74'
+
+# --- C) Exchange code → access token (LinkedIn requires client creds in the BODY)
+RESP=$(curl -sS -X POST "https://www.linkedin.com/oauth/v2/accessToken" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "grant_type=authorization_code" \
+  --data-urlencode "code=${LI_CODE}" \
+  --data-urlencode "redirect_uri=${LI_REDIRECT_URI}" \
+  --data-urlencode "client_id=${LI_CLIENT_ID}" \
+  --data-urlencode "client_secret=${LI_CLIENT_SECRET}")
+
+echo "$RESP"
+
+export LI_TOKEN=$(echo "$RESP" | jq -r .access_token)
+
+export LI_EXPIRES_IN=$(echo "$RESP" | jq -r .expires_in)   # ~5183999 seconds (~60 days)
+
+echo "LI_TOKEN begins: ${LI_TOKEN:0:12}…  expires_in: $LI_EXPIRES_IN"
