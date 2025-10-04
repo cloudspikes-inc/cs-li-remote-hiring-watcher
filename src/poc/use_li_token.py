@@ -26,7 +26,7 @@ r = requests.get(
 
 if r.status_code == 401:
     print(
-        "Token expired/invalid (401). Re-run the cURL " \
+        "Token expired/invalid (401). Re-run the cURL "
         "token steps to get a new LI_TOKEN.",
         file=sys.stderr,
     )
