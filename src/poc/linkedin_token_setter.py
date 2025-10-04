@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
-import argparse, json, os, sys, threading, webbrowser
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import urlparse, parse_qs, urlencode
-from datetime import datetime, timedelta
+
+import argparse
+import os
+import sys
+import threading
+import webbrowser
+from http.server import BaseHTTPRequestHandler
+from http.server import HTTPServer
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
+from urllib.parse import urlencode
+from datetime import datetime
+from datetime import timedelta
 import requests
 
 AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization"
@@ -45,7 +54,7 @@ class CodeCatcher(BaseHTTPRequestHandler):
 
 
 def build_auth_url(client_id, redirect_uri, state, scopes):
-    return f"{AUTH_URL}?{urlencode({'response_type': 'code', 'client_id': client_id, 'redirect_uri': redirect_uri, 'state': state, 'scope': scopes})}"
+    return "{AUTH_URL}?{urlencode({'response_type': 'code', 'client_id': client_id, 'redirect_uri': redirect_uri, 'state': state, 'scope': scopes})}"
 
 
 def exchange_code_for_token(client_id, client_secret, redirect_uri, code):
@@ -59,7 +68,7 @@ def exchange_code_for_token(client_id, client_secret, redirect_uri, code):
     r = requests.post(TOKEN_URL, data=data, timeout=30)
     body = r.json()
     if r.status_code != 200 or "access_token" not in body:
-        sys.exit(f"Token exchange failed: {body}")
+        sys.exit("Token exchange failed: {body}")
     return body
 
 
@@ -83,7 +92,7 @@ def main():
     auth_url = build_auth_url(args.client_id, args.redirect_uri, state, args.scopes)
     webbrowser.open(auth_url)
     print(
-        f"[INFO] Browser opened for LinkedIn consent. Waiting for redirect...",
+        "[INFO] Browser opened for LinkedIn consent. Waiting for redirect...",
         file=sys.stderr,
     )
     if not CodeCatcher.done_event.wait(timeout=args.timeout):
@@ -105,15 +114,15 @@ def main():
     expiry_str = expiry_dt.strftime("%Y-%m-%d %H:%M:%S %Z (%z)")
 
     # Pretty info goes to stderr so eval ignores it
-    print(f"\n[INFO] Access token fetched successfully!", file=sys.stderr)
+    print("\n[INFO] Access token fetched successfully!", file=sys.stderr)
     print(
-        f"[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)",
+        "[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)",
         file=sys.stderr,
     )
-    print(f"[INFO] Expires on: {expiry_str}\n", file=sys.stderr)
+    print("[INFO] Expires on: {expiry_str}\n", file=sys.stderr)
 
     # Plain export only (stdout)
-    print(f"export LI_TOKEN='{access_token}'")
+    print("export LI_TOKEN='{access_token}'")
 
 
 if __name__ == "__main__":

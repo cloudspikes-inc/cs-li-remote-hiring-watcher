@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import os, json, sys
+import os
+import json
+import sys
 import requests
 
 try:
@@ -24,7 +26,8 @@ r = requests.get(
 
 if r.status_code == 401:
     print(
-        "Token expired/invalid (401). Re-run the cURL token steps to get a new LI_TOKEN.",
+        "Token expired/invalid (401). Re-run the cURL " \
+        "token steps to get a new LI_TOKEN.",
         file=sys.stderr,
     )
     sys.exit(2)
