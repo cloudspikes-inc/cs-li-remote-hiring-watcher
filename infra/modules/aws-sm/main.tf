@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.0"
-    }
-  }
-}
-
 # Create the secret
 resource "aws_secretsmanager_secret" "example" {
   name        = var.secret_name
