@@ -113,6 +113,29 @@
       "Resource": "*"
     },
     {
+      "Sid": "BillingAndCostExplorerAccess",
+      "Effect": "Allow",
+      "Action": [
+        "aws-portal:ViewBilling",
+        "aws-portal:ViewUsage",
+        "aws-portal:ViewAccount",
+        "aws-portal:ModifyAccount",
+        "ce:GetCostAndUsage",
+        "ce:GetCostForecast",
+        "ce:GetUsageForecast",
+        "ce:DescribeReport",
+        "ce:ListCostCategoryDefinitions",
+        "ce:GetAnomalyMonitors",
+        "ce:GetAnomalySubscriptions",
+        "ce:GetAnomalies",
+        "cur:DescribeReportDefinitions",
+        "cur:PutReportDefinition",
+        "cur:DeleteReportDefinition",
+        "cur:ModifyReportDefinition"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "DiscoveryListOnly",
       "Effect": "Allow",
       "Action": [
