@@ -2,7 +2,7 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "SecretsManagerFullAccessForProject",
+      "Sid": "SecretsManagerFullAccessForProjects",
       "Effect": "Allow",
       "Action": [
         "secretsmanager:CreateSecret",
@@ -25,7 +25,10 @@
         "secretsmanager:RotateSecret",
         "secretsmanager:CancelRotateSecret"
       ],
-      "Resource": "arn:aws:secretsmanager:*:*:secret:cs-li-remote-hiring-watcher-*"
+      "Resource": [
+        "arn:aws:secretsmanager:*:*:secret:cs-li-remote-hiring-watcher-*",
+        "arn:aws:secretsmanager:*:*:secret:cs-linkedin-scanner-*"
+      ]
     },
     {
       "Sid": "KmsAccessForSecretsEncryption",
