@@ -4,6 +4,11 @@
         {
             "Effect": "Allow",
             "Action": [
+                "dynamodb:CreateTable",
+                "dynamodb:DeleteTable",
+                "dynamodb:DescribeTable",
+                "dynamodb:ListTables",
+                "dynamodb:UpdateTable",
                 "dynamodb:GetItem",
                 "dynamodb:BatchGetItem",
                 "dynamodb:Query",
