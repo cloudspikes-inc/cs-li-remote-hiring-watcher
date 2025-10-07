@@ -1,0 +1,84 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "SecretsManagerProjectCRUD",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:CreateSecret",
+                "secretsmanager:PutSecretValue",
+                "secretsmanager:UpdateSecret",
+                "secretsmanager:UpdateSecretVersionStage",
+                "secretsmanager:TagResource",
+                "secretsmanager:UntagResource",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:ListSecrets",
+                "secretsmanager:ListSecretVersionIds",
+                "secretsmanager:DeleteSecret",
+                "secretsmanager:RestoreSecret",
+                "secretsmanager:PutResourcePolicy",
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:ValidateResourcePolicy",
+                "secretsmanager:ReplicateSecretToRegions",
+                "secretsmanager:RemoveRegionsFromReplication",
+                "secretsmanager:RotateSecret",
+                "secretsmanager:CancelRotateSecret"
+            ],
+            "Resource": "arn:aws:secretsmanager:*:*:secret:project/*"
+        },
+        {
+            "Sid": "KmsAccessForSecrets",
+            "Effect": "Allow",
+            "Action": [
+                "kms:DescribeKey",
+                "kms:CreateGrant",
+                "kms:RetireGrant",
+                "kms:ListGrants",
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*"
+            ],
+            "Resource": "arn:aws:kms:*:*:key/*",
+            "Condition": {
+                "StringLike": {
+                    "kms:ViaService": "secretsmanager.*.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Sid": "RotationLambdaSupport",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetRandomPassword",
+                "lambda:CreateFunction",
+                "lambda:InvokeFunction",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:AddPermission",
+                "lambda:GetFunctionConfiguration"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudWatchLogsForRotation",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "DiscoveryListOnly",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:ListSecrets",
+                "secretsmanager:ListSecretVersionIds"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
