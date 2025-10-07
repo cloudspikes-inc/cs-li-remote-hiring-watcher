@@ -2,7 +2,7 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "SecretsManagerProjectCRUD",
+      "Sid": "SecretsManagerFullAccessForProject",
       "Effect": "Allow",
       "Action": [
         "secretsmanager:CreateSecret",
@@ -25,10 +25,10 @@
         "secretsmanager:RotateSecret",
         "secretsmanager:CancelRotateSecret"
       ],
-      "Resource": "arn:aws:secretsmanager:*:*:secret:project/*"
+      "Resource": "arn:aws:secretsmanager:*:*:secret:cs-li-remote-hiring-watcher-*"
     },
     {
-      "Sid": "KmsAccessForSecrets",
+      "Sid": "KmsAccessForSecretsEncryption",
       "Effect": "Allow",
       "Action": [
         "kms:DescribeKey",
@@ -43,7 +43,10 @@
       "Resource": "arn:aws:kms:*:*:key/*",
       "Condition": {
         "StringLike": {
-          "kms:ViaService": "secretsmanager.*.amazonaws.com"
+          "kms:ViaService": [
+            "secretsmanager.*.amazonaws.com",
+            "s3.*.amazonaws.com"
+          ]
         }
       }
     },
@@ -105,6 +108,32 @@
       "Action": [
         "secretsmanager:ListSecrets",
         "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AmazonQDeveloperAccess",
+      "Effect": "Allow",
+      "Action": [
+        "q:GenerateAssistantResponse",
+        "q:ListConversations",
+        "q:StartConversation",
+        "q:GetConversation",
+        "q:ListMessages",
+        "q:SendMessage",
+        "q:GetMessage",
+        "q:ListAssistants",
+        "q:GetAssistant",
+        "q:ListPlugins",
+        "q:GetPlugin",
+        "q:ListDataSources",
+        "q:GetDataSource",
+        "q:ListDocuments",
+        "q:GetDocument",
+        "q:ListKnowledgeBases",
+        "q:GetKnowledgeBase",
+        "q:ListRetrievers",
+        "q:GetRetriever"
       ],
       "Resource": "*"
     }
