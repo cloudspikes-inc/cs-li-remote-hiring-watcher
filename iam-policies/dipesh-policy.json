@@ -1,50 +1,42 @@
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "DynamoDBFullAccessForInfra",
-            "Effect": "Allow",
-            "Action": "dynamodb:*",
-            "Resource": [
-                "arn:aws:dynamodb:ap-south-1:615311846444:table/cloudspikes_*",
-                "arn:aws:dynamodb:ap-south-1:615311846444:table/cloudspikes_*/index/*"
-            ]
-        },
-        {
-            "Sid": "AllowIAMPolicyAndRoleManagement",
-            "Effect": "Allow",
-            "Action": [
-                // Actions needed to create the Lambda's execution role
-                "iam:CreateRole",
-                "iam:PutRolePolicy",
-                "iam:AttachRolePolicy",
-                "iam:PassRole",
-                
-                // Actions needed to create the custom IAM policy for Lambda-DynamoDB access
-                "iam:CreatePolicy",
-                "iam:DeletePolicy" 
-            ],
-            "Resource": [
-                // Allows management of all Roles/Policies in the account
-                "arn:aws:iam::615311846444:role/*", 
-                "arn:aws:iam::615311846444:policy/*"
-            ]
-        },
-        {
-            "Sid": "AllowLambdaServiceAndLogCreation",
-            "Effect": "Allow",
-            "Action": [
-                "lambda:CreateFunction",
-                "lambda:DeleteFunction",
-                "lambda:GetFunction",
-                "lambda:UpdateFunctionCode",
-                "lambda:UpdateFunctionConfiguration",
-                // Required for CloudWatch Logs when creating the function
-                "logs:CreateLogGroup"
-            ],
-            "Resource": [
-                "arn:aws:lambda:ap-south-1:615311846444:function:*"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DynamoDBFullAccessForInfra",
+      "Effect": "Allow",
+      "Action": "dynamodb:*",
+      "Resource": [
+        "arn:aws:dynamodb:ap-south-1:615311846444:table/cloudspikes_*",
+        "arn:aws:dynamodb:ap-south-1:615311846444:table/cloudspikes_*/index/*"
+      ]
+    },
+    {
+      "Sid": "AllowIAMPolicyAndRoleManagement",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::615311846444:role/*",
+        "arn:aws:iam::615311846444:policy/*"
+      ]
+    },
+    {
+      "Sid": "AllowLambdaServiceAndLogCreation",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:DeleteFunction",
+        "lambda:UpdateFunctionCode",
+        "logs:CreateLogGroup"
+      ],
+      "Resource": "arn:aws:lambda:ap-south-1:615311846444:function:*"
+    }
+  ]
 }
