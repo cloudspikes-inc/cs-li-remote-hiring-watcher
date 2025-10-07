@@ -24,4 +24,4 @@ jobs:
           mypy src || true
 
       - name: Tests
-        run: pytest -q 
+        run: pytest -q

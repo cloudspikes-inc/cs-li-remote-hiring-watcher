@@ -24,4 +24,4 @@ services:
     command: ["uv", "python", "src/scheduler/aps_scheduler.py"]
 # Note: The 'app' service is optional and primarily for local development.
 # To start the services, run: docker-compose up
-# To stop the services, run: docker-compose down 
+# To stop the services, run: docker-compose down
