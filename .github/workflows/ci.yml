@@ -22,6 +22,5 @@ jobs:
           black --check .
           flake8 . || echo "⚠️ flake8 errors ignored for now"
           mypy src || true
-
       - name: Tests
-        run: pytest -q 
+        run: pytest -q
