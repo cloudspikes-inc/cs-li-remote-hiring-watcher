@@ -112,30 +112,10 @@
       "Resource": "*"
     },
     {
-      "Sid": "AmazonQDeveloperAccess",
+      "Sid": "AmazonQAccess",
       "Effect": "Allow",
-      "Action": [
-        "q:GenerateAssistantResponse",
-        "q:ListConversations",
-        "q:StartConversation",
-        "q:GetConversation",
-        "q:ListMessages",
-        "q:SendMessage",
-        "q:GetMessage",
-        "q:ListAssistants",
-        "q:GetAssistant",
-        "q:ListPlugins",
-        "q:GetPlugin",
-        "q:ListDataSources",
-        "q:GetDataSource",
-        "q:ListDocuments",
-        "q:GetDocument",
-        "q:ListKnowledgeBases",
-        "q:GetKnowledgeBase",
-        "q:ListRetrievers",
-        "q:GetRetriever"
-      ],
-      "Resource": "*"
+      "Action": "iam:AttachUserPolicy",
+      "Resource": "arn:aws:iam::aws:policy/AmazonQDeveloperAccess"
     }
   ]
 }
