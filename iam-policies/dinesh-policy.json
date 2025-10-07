@@ -79,6 +79,12 @@
       ]
     },
     {
+      "Sid": "AllowListingAllBuckets",
+      "Effect": "Allow",
+      "Action": "s3:ListAllMyBuckets",
+      "Resource": "*"
+    },
+    {
       "Sid": "RotationLambdaSupport",
       "Effect": "Allow",
       "Action": [
