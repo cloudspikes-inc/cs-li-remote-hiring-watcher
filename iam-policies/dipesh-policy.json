@@ -1,32 +1,34 @@
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:GetItem",
-                "dynamodb:BatchGetItem",
-                "dynamodb:Query",
-                "dynamodb:Scan",
-                "dynamodb:PutItem",
-                "dynamodb:UpdateItem",
-                "dynamodb:DeleteItem",
-                "dynamodb:BatchWriteItem"
-            ],
-            "Resource": [
-                "arn:aws:dynamodb:*:*:table/raw_jobs",
-                "arn:aws:dynamodb:*:*:table/clean_jobs",
-                "arn:aws:dynamodb:*:*:table/job_stats"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:Query"
-            ],
-            "Resource": [
-                "arn:aws:dynamodb:*:*:table/clean_jobs/index/gsi_inserted_at"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DynamoDBFullAccessForInfra",
+      "Effect": "Allow",
+      "Action": "dynamodb:*",
+      "Resource": [
+        "arn:aws:dynamodb:ap-south-1:615311846444:table/cloudspikes_*",
+        "arn:aws:dynamodb:ap-south-1:615311846444:table/cloudspikes_*/index/*"
+      ]
+    },
+    {
+      "Sid": "AllowIAMPolicyAndRoleManagement",
+      "Effect": "Allow",
+      "Action": "iam:*",
+      "Resource": [
+        "arn:aws:iam::615311846444:role/*",
+        "arn:aws:iam::615311846444:policy/*"
+      ]
+    },
+    {
+      "Sid": "AllowLambdaServiceAndLogCreation",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:DeleteFunction",
+        "lambda:UpdateFunctionCode",
+        "logs:CreateLogGroup"
+      ],
+      "Resource": "arn:aws:lambda:ap-south-1:615311846444:function:*"
+    }
+  ]
 }
