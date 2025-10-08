@@ -13,17 +13,7 @@
     {
       "Sid": "AllowIAMPolicyAndRoleManagement",
       "Effect": "Allow",
-      "Action": [
-        "iam:CreatePolicy",
-        "iam:DeletePolicy",
-        "iam:GetPolicy",
-        "iam:GetPolicyVersion",
-        "iam:CreateRole",
-        "iam:DeleteRole",
-        "iam:AttachRolePolicy",
-        "iam:PutRolePolicy",
-        "iam:PassRole"
-      ],
+      "Action": "iam:*",
       "Resource": [
         "arn:aws:iam::615311846444:role/*",
         "arn:aws:iam::615311846444:policy/*"
