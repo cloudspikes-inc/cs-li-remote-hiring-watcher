@@ -1,84 +1,154 @@
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "SecretsManagerProjectCRUD",
-            "Effect": "Allow",
-            "Action": [
-                "secretsmanager:CreateSecret",
-                "secretsmanager:PutSecretValue",
-                "secretsmanager:UpdateSecret",
-                "secretsmanager:UpdateSecretVersionStage",
-                "secretsmanager:TagResource",
-                "secretsmanager:UntagResource",
-                "secretsmanager:DescribeSecret",
-                "secretsmanager:GetSecretValue",
-                "secretsmanager:ListSecrets",
-                "secretsmanager:ListSecretVersionIds",
-                "secretsmanager:DeleteSecret",
-                "secretsmanager:RestoreSecret",
-                "secretsmanager:PutResourcePolicy",
-                "secretsmanager:GetResourcePolicy",
-                "secretsmanager:ValidateResourcePolicy",
-                "secretsmanager:ReplicateSecretToRegions",
-                "secretsmanager:RemoveRegionsFromReplication",
-                "secretsmanager:RotateSecret",
-                "secretsmanager:CancelRotateSecret"
-            ],
-            "Resource": "arn:aws:secretsmanager:*:*:secret:project/*"
-        },
-        {
-            "Sid": "KmsAccessForSecrets",
-            "Effect": "Allow",
-            "Action": [
-                "kms:DescribeKey",
-                "kms:CreateGrant",
-                "kms:RetireGrant",
-                "kms:ListGrants",
-                "kms:Encrypt",
-                "kms:Decrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*"
-            ],
-            "Resource": "arn:aws:kms:*:*:key/*",
-            "Condition": {
-                "StringLike": {
-                    "kms:ViaService": "secretsmanager.*.amazonaws.com"
-                }
-            }
-        },
-        {
-            "Sid": "RotationLambdaSupport",
-            "Effect": "Allow",
-            "Action": [
-                "secretsmanager:GetRandomPassword",
-                "lambda:CreateFunction",
-                "lambda:InvokeFunction",
-                "lambda:UpdateFunctionCode",
-                "lambda:UpdateFunctionConfiguration",
-                "lambda:AddPermission",
-                "lambda:GetFunctionConfiguration"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CloudWatchLogsForRotation",
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "DiscoveryListOnly",
-            "Effect": "Allow",
-            "Action": [
-                "secretsmanager:ListSecrets",
-                "secretsmanager:ListSecretVersionIds"
-            ],
-            "Resource": "*"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SecretsManagerFullAccessForProjects",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:UpdateSecret",
+        "secretsmanager:UpdateSecretVersionStage",
+        "secretsmanager:TagResource",
+        "secretsmanager:UntagResource",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:ListSecrets",
+        "secretsmanager:ListSecretVersionIds",
+        "secretsmanager:DeleteSecret",
+        "secretsmanager:RestoreSecret",
+        "secretsmanager:PutResourcePolicy",
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:ValidateResourcePolicy",
+        "secretsmanager:ReplicateSecretToRegions",
+        "secretsmanager:RemoveRegionsFromReplication",
+        "secretsmanager:RotateSecret",
+        "secretsmanager:CancelRotateSecret"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:*:*:secret:cs-li-remote-hiring-watcher-*",
+        "arn:aws:secretsmanager:*:*:secret:cs-linkedin-scanner-*"
+      ]
+    },
+    {
+      "Sid": "KmsAccessForSecretsEncryption",
+      "Effect": "Allow",
+      "Action": [
+        "kms:DescribeKey",
+        "kms:CreateGrant",
+        "kms:RetireGrant",
+        "kms:ListGrants",
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "arn:aws:kms:*:*:key/*",
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": [
+            "secretsmanager.*.amazonaws.com",
+            "s3.*.amazonaws.com"
+          ]
         }
-    ]
+      }
+    },
+    {
+      "Sid": "S3GlobalCreateAndBackendAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:ListAllMyBuckets",
+        "s3:GetBucketLocation",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning",
+        "s3:PutEncryptionConfiguration",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketAcl",
+        "s3:GetBucketAcl"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3SpecificBackendObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucketVersions",
+        "s3:ListBucketMultipartUploads",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "arn:aws:s3:::cs-li-remote-hiring-watcher-terraform-state-*",
+        "arn:aws:s3:::cs-li-remote-hiring-watcher-terraform-state-*/*"
+      ]
+    },
+    {
+      "Sid": "RotationLambdaSupport",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetRandomPassword",
+        "lambda:CreateFunction",
+        "lambda:InvokeFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:AddPermission",
+        "lambda:GetFunctionConfiguration"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatchLogsForRotation",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BillingAndCostExplorerAccess",
+      "Effect": "Allow",
+      "Action": [
+        "aws-portal:ViewBilling",
+        "aws-portal:ViewUsage",
+        "aws-portal:ViewAccount",
+        "aws-portal:ModifyAccount",
+        "ce:GetCostAndUsage",
+        "ce:GetCostForecast",
+        "ce:GetUsageForecast",
+        "ce:DescribeReport",
+        "ce:ListCostCategoryDefinitions",
+        "ce:GetAnomalyMonitors",
+        "ce:GetAnomalySubscriptions",
+        "ce:GetAnomalies",
+        "cur:DescribeReportDefinitions",
+        "cur:PutReportDefinition",
+        "cur:DeleteReportDefinition",
+        "cur:ModifyReportDefinition"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DiscoveryListOnly",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:ListSecrets",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AmazonQAccess",
+      "Effect": "Allow",
+      "Action": "iam:AttachUserPolicy",
+      "Resource": "arn:aws:iam::aws:policy/AmazonQDeveloperAccess"
+    }
+  ]
 }
