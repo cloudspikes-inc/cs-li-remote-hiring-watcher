@@ -27,4 +27,3 @@ CREATE TABLE IF NOT EXISTS job_stats (
   filtered INT DEFAULT 0,
   alerted INT DEFAULT 0
 );
-
