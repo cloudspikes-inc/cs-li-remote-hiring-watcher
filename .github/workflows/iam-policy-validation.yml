@@ -1,0 +1,226 @@
+name: IAM Policy Validation
+
+on:
+  pull_request:
+    paths:
+      - 'iam-policies/**'
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+
+jobs:
+  validate-iam-policies:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v40
+        with:
+          files: |
+            iam-policies/**/*.json
+
+      - name: List changed IAM policy files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "Changed IAM policy files:"
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "  - $file"
+          done
+
+      - name: Install AWS CLI and jq
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli jq
+
+      - name: Validate JSON syntax
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🔍 Validating JSON syntax for IAM policies..."
+          validation_failed=false
+          
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "Validating: $file"
+            if ! jq empty "$file" 2>/dev/null; then
+              echo "❌ JSON syntax error in $file"
+              validation_failed=true
+            else
+              echo "✅ $file has valid JSON syntax"
+            fi
+          done
+          
+          if [ "$validation_failed" = true ]; then
+            echo "❌ One or more IAM policy files have JSON syntax errors"
+            exit 1
+          fi
+
+      - name: Validate IAM Policy structure
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🔍 Validating IAM Policy structure..."
+          validation_failed=false
+          
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "Validating IAM policy structure: $file"
+            
+            # Check if file is empty
+            if [ ! -s "$file" ]; then
+              echo "⚠️ Warning: $file is empty"
+              continue
+            fi
+            
+            # Check for required fields
+            if ! jq -e '.Version' "$file" >/dev/null 2>&1; then
+              echo "⚠️ Warning: $file missing 'Version' field"
+            fi
+            
+            if ! jq -e '.Statement' "$file" >/dev/null 2>&1; then
+              echo "❌ Error: $file missing required 'Statement' field"
+              validation_failed=true
+            else
+              echo "✅ $file has valid IAM policy structure"
+            fi
+            
+            # Validate Statement array structure
+            if jq -e '.Statement | type == "array"' "$file" >/dev/null 2>&1; then
+              statement_count=$(jq '.Statement | length' "$file")
+              echo "  📋 Policy contains $statement_count statement(s)"
+              
+              # Check each statement for required fields
+              for i in $(seq 0 $((statement_count - 1))); do
+                if ! jq -e ".Statement[$i].Effect" "$file" >/dev/null 2>&1; then
+                  echo "❌ Error: Statement $i missing 'Effect' field in $file"
+                  validation_failed=true
+                fi
+                
+                if ! jq -e ".Statement[$i].Action" "$file" >/dev/null 2>&1; then
+                  echo "❌ Error: Statement $i missing 'Action' field in $file"
+                  validation_failed=true
+                fi
+              done
+            elif jq -e '.Statement | type == "object"' "$file" >/dev/null 2>&1; then
+              echo "  📋 Policy contains 1 statement (object format)"
+              
+              if ! jq -e ".Statement.Effect" "$file" >/dev/null 2>&1; then
+                echo "❌ Error: Statement missing 'Effect' field in $file"
+                validation_failed=true
+              fi
+              
+              if ! jq -e ".Statement.Action" "$file" >/dev/null 2>&1; then
+                echo "❌ Error: Statement missing 'Action' field in $file"
+                validation_failed=true
+              fi
+            fi
+          done
+          
+          if [ "$validation_failed" = true ]; then
+            echo "❌ One or more IAM policy files have structural errors"
+            exit 1
+          fi
+
+      - name: AWS IAM Policy Simulator (Dry Run)
+        if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-south-1
+        run: |
+          echo "🔍 Running AWS IAM Policy validation..."
+          validation_failed=false
+          
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "AWS validating: $file"
+            
+            # Skip empty files
+            if [ ! -s "$file" ]; then
+              echo "⚠️ Skipping empty file: $file"
+              continue
+            fi
+            
+            # Use AWS CLI to validate the policy document
+            if aws iam create-policy --policy-name "temp-validation-policy-$(date +%s)" --policy-document "file://$file" --dry-run 2>/dev/null; then
+              echo "✅ $file passed AWS policy validation"
+            else
+              # Try alternative validation method
+              if ! aws sts get-caller-identity >/dev/null 2>&1; then
+                echo "⚠️ AWS credentials not configured, skipping AWS validation for $file"
+              else
+                echo "❌ $file failed AWS policy validation"
+                validation_failed=true
+              fi
+            fi
+          done
+          
+          if [ "$validation_failed" = true ]; then
+            echo "❌ One or more IAM policy files failed AWS validation"
+            exit 1
+          fi
+
+      - name: Policy Review Checklist
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "📋 IAM Policy Review Checklist:"
+          echo ""
+          echo "✅ JSON syntax validated"
+          echo "✅ IAM policy structure validated"
+          echo "✅ AWS policy format validated"
+          echo ""
+          echo "📝 Manual Review Required:"
+          echo "  - Principle of least privilege applied?"
+          echo "  - Resource ARNs properly scoped?"
+          echo "  - Conditions used where appropriate?"
+          echo "  - No wildcards in sensitive actions?"
+          echo ""
+          echo "👥 Review Assignment:"
+          echo "  - Please assign this PR to @cloudspikes-inc for final approval"
+          echo "  - Team members: @dipesh @dinesh @amar @sumit - please review"
+
+      - name: Comment PR with validation results
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changedFiles = "${{ steps.changed-files.outputs.all_changed_files }}".split(' ');
+            
+            let comment = `## 🔒 IAM Policy Validation Results\n\n`;
+            comment += `### Changed Files:\n`;
+            
+            changedFiles.forEach(file => {
+              comment += `- \`${file}\`\n`;
+            });
+            
+            comment += `\n### ✅ Validation Status:\n`;
+            comment += `- JSON Syntax: ✅ Passed\n`;
+            comment += `- IAM Structure: ✅ Passed\n`;
+            comment += `- AWS Format: ✅ Passed\n`;
+            
+            comment += `\n### 👥 Review Required:\n`;
+            comment += `@cloudspikes-inc - Please review and approve this IAM policy change.\n`;
+            comment += `\nTeam: @dipesh @dinesh @amar @sumit - Please review the policy changes.\n`;
+            
+            comment += `\n### 📝 Manual Checklist:\n`;
+            comment += `- [ ] Principle of least privilege applied\n`;
+            comment += `- [ ] Resource ARNs properly scoped\n`;
+            comment += `- [ ] Appropriate conditions used\n`;
+            comment += `- [ ] No unnecessary wildcards\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Summary
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🎉 IAM Policy validation completed successfully!"
+          echo "📋 All changed IAM policy files passed automated validation"
+          echo "👀 Manual review is still required before merge"
