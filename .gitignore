@@ -217,3 +217,7 @@ Thumbs.db
 
 # AWS credentials
 .aws/
+
+complete-local-test.sh
+test-iam-validation.sh
+test-terraform-pipeline.sh

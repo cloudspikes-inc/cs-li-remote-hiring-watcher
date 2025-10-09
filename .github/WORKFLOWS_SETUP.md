@@ -19,8 +19,8 @@ Validates IAM policy JSON files in the `iam-policies/` directory whenever change
 
 ### Required GitHub Secrets
 ```
-AWS_ACCESS_KEY_ID      # AWS access key for policy validation
-AWS_SECRET_ACCESS_KEY  # AWS secret key for policy validation
+AWS_ACCESS_KEY_ID_TEST      # AWS access key for policy validation
+AWS_SECRET_ACCESS_KEY_TEST  # AWS secret key for policy validation
 ```
 
 ### Team Members Tagged for Review
@@ -64,8 +64,8 @@ Runs Terraform validation, planning, and apply stages for infrastructure changes
 ### Required GitHub Secrets
 ```
 # AWS Credentials
-AWS_ACCESS_KEY_ID              # AWS access key for Terraform operations
-AWS_SECRET_ACCESS_KEY          # AWS secret key for Terraform operations
+AWS_ACCESS_KEY_ID_TEST              # AWS access key for Terraform operations
+AWS_SECRET_ACCESS_KEY_TEST          # AWS secret key for Terraform operations
 
 # Slack Webhook URLs (for each environment)
 SLACK_WEBHOOK_URL_TEST         # Test environment Slack webhook
@@ -85,8 +85,8 @@ Go to **Settings → Secrets and variables → Actions** and add:
 
 ```bash
 # AWS Credentials (IAM user with appropriate permissions)
-AWS_ACCESS_KEY_ID=AKIA...
-AWS_SECRET_ACCESS_KEY=...
+AWS_ACCESS_KEY_ID_TEST=AKIA...
+AWS_SECRET_ACCESS_KEY_TEST=...
 
 # Slack Webhook URLs
 SLACK_WEBHOOK_URL_TEST=https://hooks.slack.com/services/...
