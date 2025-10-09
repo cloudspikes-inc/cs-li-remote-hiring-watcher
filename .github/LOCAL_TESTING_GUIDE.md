@@ -41,8 +41,8 @@ nano .secrets
 ```bash
 aws configure
 # Or set environment variables:
-export AWS_ACCESS_KEY_ID="your-key"
-export AWS_SECRET_ACCESS_KEY="your-secret"
+export AWS_ACCESS_KEY_ID_TEST="your-key"
+export AWS_SECRET_ACCESS_KEY_TEST="your-secret"
 export AWS_DEFAULT_REGION="ap-south-1"
 ```
 
