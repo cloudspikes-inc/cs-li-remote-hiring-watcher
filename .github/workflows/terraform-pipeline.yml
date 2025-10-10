@@ -14,7 +14,7 @@ env:
   AWS_DEFAULT_REGION: 'ap-south-1'
 
 jobs:
-  terraform-validate:
+  terraform-operations:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -143,6 +143,7 @@ jobs:
             });
 
   terraform-apply:
+    needs: terraform-operations
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: ${{ matrix.environment }} # 👈 Secure environment gate
