@@ -9,6 +9,11 @@ on:
       - develop
       - 'feature/**'
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   validate-iam-policies:
     runs-on: ubuntu-latest
