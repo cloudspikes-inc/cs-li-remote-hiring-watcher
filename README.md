@@ -26,10 +26,34 @@ This repo: `cs-li-remote-hiring-watcher` -– LinkedIn Remote Job Scanner – Cl
 
 All the task-related details about everyone are documented in the Google sheet's link given below:
 
-https://docs.google.com/spreadsheets/d/1xkrC7jQNHkrERcOLLz6NBv8dCcfZvddP8IJqKJ3CuS4/edit?usp=sharing
-
+<https://docs.google.com/spreadsheets/d/1xkrC7jQNHkrERcOLLz6NBv8dCcfZvddP8IJqKJ3CuS4/edit?usp=sharing>
 
 ## 🗂️ Repository Structure
+
+cloudspikes-linkedin-remote-scanner/
+├─ src/                # Source code
+│  ├─ connectors/      # LinkedIn API connector
+│  ├─ filters/         # Keyword filter logic
+│  ├─ alerts/          # Slack alerts + daily digest
+│  ├─ scheduler/       # APScheduler jobs
+│  ├─ db/              # DB schema + helper scripts
+│  ├─ health/          # Health check scripts
+│  └─ **init**.py
+├─ config/             # Config files (keywords, app settings)
+├─ tests/              # Unit tests
+├─ .github/            # CI/CD workflows + issue/PR templates
+├─ docker/             # Dockerfile + docker-compose
+├─ scripts/            # Helper scripts for DB + local runs
+├─ .env.example        # Sample env vars
+├─ .gitignore
+├─ .pre-commit-config.yaml
+├─ Makefile
+├─ pyproject.toml / requirements.txt
+├─ CONTRIBUTING.md
+├─ CODEOWNERS
+├─ SECURITY.md
+├─ LICENSE
+└─ README.md
 
 ```
 cloudspikes-linkedin-remote-scanner/
