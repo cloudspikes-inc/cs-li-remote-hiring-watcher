@@ -19,7 +19,7 @@ env:
     AWS_DEFAULT_REGION: "ap-south-1"
 
 jobs:
-    terraform-plan:
+    terraform:
         runs-on: ubuntu-latest
         strategy:
             matrix:
@@ -129,8 +129,8 @@ jobs:
 
                       comment += `### 🚀 Next Steps:\n`;
                       comment += `- Review the plan carefully\n`;
-                      comment += `- Terraform Apply job will require manual approval\n`;
-                      comment += `- **Note**: Approval required via environment protection (CODEOWNERS)\n`;
+                      comment += `- Terraform apply waits on a CODEOWNERS manual approval gate\n`;
+                      comment += `- Approvers: @dinesh-bhagdev-csi, @cloudspikes-inc, @Trisumit\n`;
 
                       github.rest.issues.createComment({
                         issue_number: context.issue.number,
@@ -147,52 +147,16 @@ jobs:
                   path: infra/envs/${{ matrix.environment }}/tfplan-${{ matrix.environment }}.*
                   retention-days: 5
 
-    terraform-apply:
-        needs: terraform-plan
-        runs-on: ubuntu-latest
-        environment: ${{ matrix.environment }}
-        if: github.event.pull_request.merged == false
-        strategy:
-            matrix:
-                environment: [test] # Only test environment for now, expand later
-
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
+            - name: Await CODEOWNERS Approval for Apply
+              if: steps.changed-files.outputs.any_changed == 'true'
+              uses: trstringer/manual-approval@v1
               with:
-                  terraform_version: ${{ env.TF_VERSION }}
-
-            - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
-                  aws-region: ${{ env.AWS_DEFAULT_REGION }}
-
-            - name: Download Terraform Plan
-              uses: actions/download-artifact@v4
-              with:
-                  name: terraform-plan-${{ matrix.environment }}
-                  path: infra/envs/${{ matrix.environment }}/
-
-            - name: Terraform Init
-              working-directory: infra/envs/${{ matrix.environment }}
-              run: |
-                  echo "🚀 Re-initializing Terraform for apply..."
-                  terraform init
-
-            # This step will only run after manual approval via environment protection rules
-            # The environment protection will pause the workflow here until approved by CODEOWNERS
-            - name: Environment Protection Checkpoint
-              run: |
-                  echo "🔒 Manual approval received for ${{ matrix.environment }} environment"
-                  echo "✅ Approved by CODEOWNERS via environment protection"
-                  echo "🚀 Proceeding with Terraform apply..."
+                  approvers: dinesh-bhagdev-csi,cloudspikes-inc,Trisumit
+                  minimum-approvals: 1
+                  secret: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Terraform Apply
+              if: steps.changed-files.outputs.any_changed == 'true'
               working-directory: infra/envs/${{ matrix.environment }}
               env:
                   TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
@@ -203,12 +167,14 @@ jobs:
                   terraform apply -auto-approve tfplan-${{ matrix.environment }}.out
 
             - name: Terraform Output
+              if: steps.changed-files.outputs.any_changed == 'true'
               working-directory: infra/envs/${{ matrix.environment }}
               run: |
                   echo "📋 Terraform outputs for ${{ matrix.environment }}:"
                   terraform output
 
             - name: Comment PR with Apply Results
+              if: steps.changed-files.outputs.any_changed == 'true'
               uses: actions/github-script@v7
               with:
                   script: |
@@ -221,7 +187,7 @@ jobs:
                       comment += `- Test the infrastructure functionality\n`;
                       comment += `- Monitor for any issues\n\n`;
                       comment += `Applied by: @${{ github.actor }}\n`;
-                      comment += `Approved by: CODEOWNERS via environment protection\n`;
+                      comment += `Approved via CODEOWNERS manual gate\n`;
 
                       github.rest.issues.createComment({
                         issue_number: context.issue.number,
