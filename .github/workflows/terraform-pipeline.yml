@@ -157,7 +157,18 @@ jobs:
             matrix:
                 environment: [test] # Only test environment for now, expand later
 
+        # Add a manual trigger step
         steps:
+            - name: Wait for manual approval
+              uses: trstringer/manual-approval@v1
+              with:
+                  secret: ${{ secrets.GITHUB_TOKEN }}
+                  approvers: cloudspikes-inc
+                  minimum-approvals: 1
+                  issue-title: "Terraform Apply Approval Required"
+                  issue-body: "Please approve to proceed with Terraform apply for ${{ matrix.environment }} environment."
+                  exclude-workflow-initiator-as-approver: false
+
             - name: Checkout code
               uses: actions/checkout@v4
 
