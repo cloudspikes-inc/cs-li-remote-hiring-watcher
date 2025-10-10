@@ -3,43 +3,23 @@ name: Terraform Infrastructure Pipeline
 on:
   pull_request:
     paths:
-      - "infra/**"
+      - 'infra/**'
     branches:
       - main
       - develop
-      - "feature/**"
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Select environment to apply"
-        required: true
-        default: "test"
-        type: choice
-        options:
-          - test
-          - dev
-          - prod
-
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
+      - 'feature/**'
 
 env:
-  TF_VERSION: "1.6.0"
-  AWS_DEFAULT_REGION: "ap-south-1"
+  TF_VERSION: '1.6.0'
+  AWS_DEFAULT_REGION: 'ap-south-1'
 
 jobs:
-  # -----------------------------------------
-  # Job 1: Terraform Plan (Auto on PR)
-  # -----------------------------------------
-  terraform-plan:
-    if: github.event_name == 'pull_request'
+  terraform-validate:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [test] # Expand later if needed
-
+        environment: [test] # Only test environment for now, expand later to [dev, prod]
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,25 +46,37 @@ jobs:
       - name: Terraform Format Check
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: infra/envs/${{ matrix.environment }}
-        run: terraform fmt -check -recursive
+        run: |
+          echo "🔍 Checking Terraform formatting for ${{ matrix.environment }}..."
+          terraform fmt -check -recursive
+        continue-on-error: false
 
       - name: Terraform Init
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: infra/envs/${{ matrix.environment }}
-        run: terraform init
+        run: |
+          echo "🚀 Initializing Terraform for ${{ matrix.environment }}..."
+          terraform init
 
       - name: Terraform Validate
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: infra/envs/${{ matrix.environment }}
-        run: terraform validate
+        run: |
+          echo "✅ Validating Terraform configuration for ${{ matrix.environment }}..."
+          terraform validate
 
       - name: Terraform Plan
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: infra/envs/${{ matrix.environment }}
         env:
           TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+          TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
         run: |
+          echo "📋 Creating Terraform plan for ${{ matrix.environment }}..."
           terraform plan -out=tfplan-${{ matrix.environment }}.out
+          
+          # Save plan output for later use
           terraform show -no-color tfplan-${{ matrix.environment }}.out > tfplan-${{ matrix.environment }}.txt
 
       - name: Upload Terraform Plan
@@ -95,15 +87,72 @@ jobs:
           path: infra/envs/${{ matrix.environment }}/tfplan-${{ matrix.environment }}.*
           retention-days: 5
 
-  # -----------------------------------------
-  # Job 2: Terraform Apply (Manual trigger)
-  # -----------------------------------------
+      - name: Comment PR with Plan Summary
+        if: steps.changed-files.outputs.any_changed == 'true' && matrix.environment == 'test'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = `## 🏗️ Terraform Plan Summary\n\n`;
+            comment += `### Environment: ${{ matrix.environment }}\n\n`;
+            
+            try {
+              const planPath = path.join('infra', 'envs', '${{ matrix.environment }}', 'tfplan-${{ matrix.environment }}.txt');
+              const planContent = fs.readFileSync(planPath, 'utf8');
+              
+              // Extract plan summary
+              const lines = planContent.split('\n');
+              const summaryIndex = lines.findIndex(line => line.includes('Plan:'));
+              
+              if (summaryIndex >= 0) {
+                const summary = lines[summaryIndex];
+                comment += `### 📊 Changes Summary:\n\`\`\`\n${summary}\n\`\`\`\n\n`;
+              }
+              
+              // Add truncated plan (first 50 lines)
+              const truncatedPlan = lines.slice(0, 50).join('\n');
+              comment += `### 📋 Plan Details (truncated):\n\`\`\`hcl\n${truncatedPlan}\n`;
+              
+              if (lines.length > 50) {
+                comment += `\n... (${lines.length - 50} more lines in full plan)\n`;
+              }
+              
+              comment += `\`\`\`\n\n`;
+            } catch (error) {
+              comment += `⚠️ Could not read plan file: ${error.message}\n\n`;
+            }
+            
+            comment += `### ✅ Validation Status:\n`;
+            comment += `- Format Check: ✅ Passed\n`;
+            comment += `- Init: ✅ Passed\n`;
+            comment += `- Validate: ✅ Passed\n`;
+            comment += `- Plan: ✅ Passed\n\n`;
+            
+            comment += `### 🚀 Next Steps:\n`;
+            comment += `- Review the plan carefully\n`;
+            comment += `- Approve this PR to proceed with apply\n`;
+            comment += `- **Note**: Apply stage requires approval from @cloudspikes-inc\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
   terraform-apply:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }} # 👈 Secure environment gate
-    concurrency: terraform-${{ github.event.inputs.environment }}
+    environment: ${{ matrix.environment }} # 👈 Secure environment gate
+    
+    strategy:
+      matrix:
+        environment: [test] # Only test environment for now, expand later
 
+    concurrency: terraform-${{ matrix.environment }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -116,24 +165,56 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets['AWS_ACCESS_KEY_ID_TEST' + github.event.inputs.environment | upper] }}
-          aws-secret-access-key: ${{ secrets['AWS_SECRET_ACCESS_KEY_TEST' + github.event.inputs.environment | upper] }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
-      - name: Download Terraform Plan Artifact
+      - name: Download Terraform Plan
         uses: actions/download-artifact@v4
         with:
-          name: terraform-plan-${{ github.event.inputs.environment }}
-          path: infra/envs/${{ github.event.inputs.environment }}
+          name: terraform-plan-${{ matrix.environment }}
+          path: infra/envs/${{ matrix.environment }}/
+
+      - name: Terraform Init
+        working-directory: infra/envs/${{ matrix.environment }}
+        run: |
+          echo "🚀 Re-initializing Terraform for apply..."
+          terraform init
 
       - name: Terraform Apply
-        working-directory: infra/envs/${{ github.event.inputs.environment }}
+        working-directory: infra/envs/${{ matrix.environment }}
         env:
           TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+          TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
         run: |
-          echo "🚀 Applying Terraform changes for ${{ github.event.inputs.environment }}..."
-          terraform apply -auto-approve tfplan-${{ github.event.inputs.environment }}.out
+          echo "🚀 Applying Terraform changes for ${{ matrix.environment }}..."
+          terraform apply -auto-approve tfplan-${{ matrix.environment }}.out
 
       - name: Terraform Output
-        working-directory: infra/envs/${{ github.event.inputs.environment }}
-        run: terraform output
+        working-directory: infra/envs/${{ matrix.environment }}
+        run: |
+          echo "📋 Terraform outputs for ${{ matrix.environment }}:"
+          terraform output
+
+      - name: Comment PR with Apply Results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let comment = `## 🚀 Terraform Apply Results\n\n`;
+            comment += `### Environment: ${{ matrix.environment }}\n\n`;
+            comment += `### ✅ Apply Status: SUCCESS\n\n`;
+            comment += `Terraform changes have been successfully applied to the ${{ matrix.environment }} environment.\n\n`;
+            comment += `### 🔍 Next Steps:\n`;
+            comment += `- Verify the applied changes in AWS console\n`;
+            comment += `- Test the infrastructure functionality\n`;
+            comment += `- Monitor for any issues\n\n`;
+            comment += `Applied by: @${{ github.actor }}\n`;
+            comment += `Approved by: @cloudspikes-inc\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
