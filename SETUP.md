@@ -3,11 +3,13 @@
 ## Setting up Terraform Variables
 
 1. Copy the example file:
+
    ```bash
    cp infra/envs/test/terraform.tfvars.example infra/envs/test/terraform.tfvars
    ```
 
 2. Edit the terraform.tfvars file and replace the placeholder values:
+
    ```terraform
    slack_webhook_url_test = "your-actual-webhook-url-here"
    ```

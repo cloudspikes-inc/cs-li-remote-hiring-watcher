@@ -38,7 +38,7 @@ cloudspikes-linkedin-remote-scanner/
 │  ├─ scheduler/       # APScheduler jobs
 │  ├─ db/              # DB schema + helper scripts
 │  ├─ health/          # Health check scripts
-│  └─ __init__.py
+│  └─ **init**.py
 ├─ config/             # Config files (keywords, app settings)
 ├─ tests/              # Unit tests
 ├─ .github/            # CI/CD workflows + issue/PR templates
@@ -54,6 +54,7 @@ cloudspikes-linkedin-remote-scanner/
 ├─ SECURITY.md
 ├─ LICENSE
 └─ README.md
+
 ```
 cloudspikes-linkedin-remote-scanner/
 ├─ src/                # Source code

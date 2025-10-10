@@ -4,7 +4,7 @@ This guide provides multiple methods to test the GitHub Actions workflows locall
 
 ## 📋 Prerequisites
 
-### Install Required Tools:
+### Install Required Tools
 
 ```bash
 # Install act (GitHub Actions runner)
@@ -32,12 +32,14 @@ brew install infracost
 ### 1. Configure Local Secrets
 
 Edit the `.secrets` file (already created):
+
 ```bash
 # Add your real AWS credentials and webhook URLs
 nano .secrets
 ```
 
 ### 2. Configure AWS Credentials (if testing AWS components)
+
 ```bash
 aws configure
 # Or set environment variables:
@@ -50,13 +52,15 @@ export AWS_DEFAULT_REGION="ap-south-1"
 
 ### Method 1: Component Testing (Recommended for Initial Testing)
 
-#### Test IAM Policy Validation:
+#### Test IAM Policy Validation
+
 ```bash
 cd /Users/dhruvrana/Downloads/CSI/cs-li-remote-hiring-watcher
 ./test-iam-validation.sh
 ```
 
-#### Test Terraform Pipeline:
+#### Test Terraform Pipeline
+
 ```bash
 cd /Users/dhruvrana/Downloads/CSI/cs-li-remote-hiring-watcher
 ./test-terraform-pipeline.sh
@@ -64,7 +68,8 @@ cd /Users/dhruvrana/Downloads/CSI/cs-li-remote-hiring-watcher
 
 ### Method 2: Using `act` (GitHub Actions Local Runner)
 
-#### Test IAM Policy Validation Workflow:
+#### Test IAM Policy Validation Workflow
+
 ```bash
 cd /Users/dhruvrana/Downloads/CSI/cs-li-remote-hiring-watcher
 
@@ -75,7 +80,8 @@ act pull_request \
   --verbose
 ```
 
-#### Test Terraform Pipeline Workflow:
+#### Test Terraform Pipeline Workflow
+
 ```bash
 # Test terraform validation job only (safer)
 act pull_request \
@@ -85,7 +91,8 @@ act pull_request \
   --verbose
 ```
 
-#### Test with specific event data:
+#### Test with specific event data
+
 ```bash
 # Create event payload
 cat > event.json << 'EOF'
@@ -111,7 +118,8 @@ act pull_request \
 
 ### Method 3: Docker Testing (Most Accurate)
 
-#### Run in GitHub Actions Ubuntu environment:
+#### Run in GitHub Actions Ubuntu environment
+
 ```bash
 # Pull the GitHub Actions runner image
 docker pull catthehacker/ubuntu:act-latest
@@ -126,6 +134,7 @@ act pull_request \
 ## 🎯 Focused Testing Scenarios
 
 ### Test Scenario 1: IAM Policy Change
+
 ```bash
 # Create a test IAM policy change
 echo '{
@@ -144,6 +153,7 @@ act pull_request --workflows .github/workflows/iam-policy-validation.yml --secre
 ```
 
 ### Test Scenario 2: Terraform Change
+
 ```bash
 # Make a small change to terraform files
 echo "# Test change $(date)" >> infra/envs/test/terraform.tfvars
@@ -153,6 +163,7 @@ act pull_request --workflows .github/workflows/terraform-pipeline.yml --job terr
 ```
 
 ### Test Scenario 3: Security Scan
+
 ```bash
 # Test security scanning locally
 cd infra/
@@ -166,14 +177,16 @@ tfsec .
 
 ## 🔍 Debugging Workflows
 
-### Enable Debug Mode:
+### Enable Debug Mode
+
 ```bash
 # Add to .secrets file:
 echo "ACTIONS_STEP_DEBUG=true" >> .secrets
 echo "ACTIONS_RUNNER_DEBUG=true" >> .secrets
 ```
 
-### Test Individual Steps:
+### Test Individual Steps
+
 ```bash
 # Test just the validation steps
 act pull_request \
@@ -186,7 +199,8 @@ act pull_request \
 
 ## 📝 Manual Validation Commands
 
-### IAM Policy Validation:
+### IAM Policy Validation
+
 ```bash
 # Check JSON syntax
 for file in iam-policies/*.json; do
@@ -198,7 +212,8 @@ done
 aws iam create-policy --policy-name temp-test --policy-document file://iam-policies/test-policy.json --dry-run
 ```
 
-### Terraform Validation:
+### Terraform Validation
+
 ```bash
 cd infra/envs/test/
 
@@ -224,7 +239,8 @@ terraform plan
 3. **The `.secrets` file contains sensitive data** - never commit it
 4. **act runs in Docker** - some commands might behave differently than in real GitHub Actions
 
-### Safe Testing Practices:
+### Safe Testing Practices
+
 - Use separate AWS account for testing
 - Use read-only IAM permissions when possible
 - Test validation and planning only, avoid apply operations
@@ -232,7 +248,8 @@ terraform plan
 
 ## 📊 Expected Output Examples
 
-### Successful IAM Validation:
+### Successful IAM Validation
+
 ```
 🔍 Testing IAM Policy Validation Components...
 ✅ test-policy.json has valid JSON syntax
@@ -240,7 +257,8 @@ terraform plan
 🎉 IAM Policy validation test completed!
 ```
 
-### Successful Terraform Validation:
+### Successful Terraform Validation
+
 ```
 🏗️ Testing Terraform Pipeline Components...
 ✅ Terraform is installed: Terraform v1.6.0
@@ -260,9 +278,10 @@ After local testing passes:
 
 ## 🔧 Troubleshooting
 
-### Common Issues:
+### Common Issues
 
-#### act fails to run:
+#### act fails to run
+
 ```bash
 # Check Docker is running
 docker ps
@@ -271,7 +290,8 @@ docker ps
 act --platform ubuntu-latest=catthehacker/ubuntu:act-20.04
 ```
 
-#### Terraform init fails:
+#### Terraform init fails
+
 ```bash
 # Make sure AWS credentials are configured
 aws sts get-caller-identity
@@ -280,7 +300,8 @@ aws sts get-caller-identity
 cat infra/envs/test/backend.tf
 ```
 
-#### Permission issues:
+#### Permission issues
+
 ```bash
 # Make scripts executable
 chmod +x *.sh
