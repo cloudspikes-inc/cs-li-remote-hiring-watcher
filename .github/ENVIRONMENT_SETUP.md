@@ -1,6 +1,7 @@
 # GitHub Environment Setup for Terraform Pipeline
 
 ## Overview
+
 The Terraform pipeline uses GitHub Environments with protection rules to provide manual approval directly in the pipeline UI, rather than creating separate GitHub issues.
 
 ## Setup Instructions
@@ -20,11 +21,13 @@ Navigate to your repository settings and create the following environments:
 For each environment, configure the following protection rules:
 
 #### Required Reviewers
+
 - ✅ Enable "Required reviewers"
 - Add reviewers: `cloudspikes-inc`
 - Set minimum number of reviewers: `1`
 
 #### Optional Settings
+
 - ⏱️ **Wait timer**: Set to `0` minutes (immediate approval available)
 - 🏷️ **Deployment branches**: Limit to `main`, `develop`, and `feature/*` branches
 - 🔒 **Environment secrets**: Add any environment-specific secrets if needed
@@ -34,7 +37,7 @@ For each environment, configure the following protection rules:
 When the Terraform pipeline runs:
 
 1. **Automatic Steps**: Format, Init, Validate, Plan run automatically
-2. **⏸️ Approval Gate**: Pipeline pauses and shows "Waiting for approval" 
+2. **⏸️ Approval Gate**: Pipeline pauses and shows "Waiting for approval"
 3. **Reviewer Action**: Reviewer goes to Actions tab → Current run → "Review deployments"
 4. **Environment Selection**: Select environment(s) to approve and click "Approve and deploy"
 5. **Continuation**: Pipeline continues with Apply, Output, and Results steps
