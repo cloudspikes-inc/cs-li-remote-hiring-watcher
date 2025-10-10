@@ -153,8 +153,6 @@ jobs:
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   script: |
-                      const core = require('@actions/core');
-
                       const requiredApprovers = [
                         'dinesh-bhagdev-csi',
                         'cloudspikes-inc',
@@ -165,7 +163,7 @@ jobs:
                       const timeoutMs = timeoutMinutes * 60 * 1000;
                       const start = Date.now();
 
-                      core.info(`Waiting for CODEOWNERS approval before apply. Required approvers: ${requiredApprovers.join(', ')}`);
+                      console.log(`Waiting for CODEOWNERS approval before apply. Required approvers: ${requiredApprovers.join(', ')}`);
 
                       async function hasApprovals() {
                         const { data: reviews } = await github.rest.pulls.listReviews({
@@ -188,16 +186,15 @@ jobs:
                       while (true) {
                         const { approved, missing } = await hasApprovals();
                         if (approved) {
-                          core.info('All required CODEOWNERS have approved. Proceeding to Terraform apply.');
+                          console.log('All required CODEOWNERS have approved. Proceeding to Terraform apply.');
                           break;
                         }
 
                         if (Date.now() - start > timeoutMs) {
-                          core.setFailed(`Timed out waiting for CODEOWNERS approval. Still missing approvals from: ${missing.join(', ')}`);
-                          break;
+                          throw new Error(`Timed out waiting for CODEOWNERS approval. Still missing approvals from: ${missing.join(', ')}`);
                         }
 
-                        core.info(`Still waiting on approvals from: ${missing.join(', ')}. Checking again in ${pollIntervalSeconds}s...`);
+                        console.log(`Still waiting on approvals from: ${missing.join(', ')}. Checking again in ${pollIntervalSeconds}s...`);
                         await new Promise(resolve => setTimeout(resolve, pollIntervalSeconds * 1000));
                       }
 
