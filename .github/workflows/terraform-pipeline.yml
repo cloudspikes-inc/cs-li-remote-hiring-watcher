@@ -129,7 +129,7 @@ jobs:
 
                       comment += `### 🚀 Next Steps:\n`;
                       comment += `- Review the plan carefully\n`;
-                      comment += `- Terraform apply waits on a CODEOWNERS manual approval gate\n`;
+                      comment += `- Terraform apply waits on CODEOWNERS PR approval gate\n`;
                       comment += `- Approvers: @dinesh-bhagdev-csi, @cloudspikes-inc, @Trisumit\n`;
 
                       github.rest.issues.createComment({
@@ -149,16 +149,57 @@ jobs:
 
             - name: Await CODEOWNERS Approval for Apply
               if: steps.changed-files.outputs.any_changed == 'true'
-              uses: actions/pause@v1
+              uses: actions/github-script@v7
               with:
-                  approvers: |
-                      dinesh-bhagdev-csi
-                      cloudspikes-inc
-                      Trisumit
-                  instructions: |
-                      Terraform apply is ready for ${{ matrix.environment }}.
-                      A CODEOWNER must approve to proceed.
-                  timeout-minutes: 1440
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      const core = require('@actions/core');
+
+                      const requiredApprovers = [
+                        'dinesh-bhagdev-csi',
+                        'cloudspikes-inc',
+                        'Trisumit'
+                      ];
+                      const pollIntervalSeconds = 60;
+                      const timeoutMinutes = 1440;
+                      const timeoutMs = timeoutMinutes * 60 * 1000;
+                      const start = Date.now();
+
+                      core.info(`Waiting for CODEOWNERS approval before apply. Required approvers: ${requiredApprovers.join(', ')}`);
+
+                      async function hasApprovals() {
+                        const { data: reviews } = await github.rest.pulls.listReviews({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          pull_number: context.issue.number,
+                          per_page: 100,
+                        });
+
+                        const approvedBy = new Set(
+                          reviews
+                            .filter(review => review.state === 'APPROVED')
+                            .map(review => review.user.login.toLowerCase())
+                        );
+
+                        const missing = requiredApprovers.filter(login => !approvedBy.has(login.toLowerCase()));
+                        return { approved: missing.length === 0, missing };
+                      }
+
+                      while (true) {
+                        const { approved, missing } = await hasApprovals();
+                        if (approved) {
+                          core.info('All required CODEOWNERS have approved. Proceeding to Terraform apply.');
+                          break;
+                        }
+
+                        if (Date.now() - start > timeoutMs) {
+                          core.setFailed(`Timed out waiting for CODEOWNERS approval. Still missing approvals from: ${missing.join(', ')}`);
+                          break;
+                        }
+
+                        core.info(`Still waiting on approvals from: ${missing.join(', ')}. Checking again in ${pollIntervalSeconds}s...`);
+                        await new Promise(resolve => setTimeout(resolve, pollIntervalSeconds * 1000));
+                      }
 
             - name: Terraform Apply
               if: steps.changed-files.outputs.any_changed == 'true'
