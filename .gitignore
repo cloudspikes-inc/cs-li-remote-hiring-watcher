@@ -221,3 +221,4 @@ Thumbs.db
 complete-local-test.sh
 test-iam-validation.sh
 test-terraform-pipeline.sh
+validate-workflows.sh

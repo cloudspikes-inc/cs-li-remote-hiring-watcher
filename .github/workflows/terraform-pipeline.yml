@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [dev, test, prod]
+        environment: [test] # Only test environment for now, expand later to [dev, prod]
     
     steps:
       - name: Checkout code
