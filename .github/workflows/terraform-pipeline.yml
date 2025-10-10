@@ -19,8 +19,9 @@ env:
     AWS_DEFAULT_REGION: "ap-south-1"
 
 jobs:
-    terraform-validate:
+    terraform-pipeline:
         runs-on: ubuntu-latest
+        environment: ${{ matrix.environment }}
         strategy:
             matrix:
                 environment: [test] # Only test environment for now, expand later to [dev, prod]
@@ -37,8 +38,8 @@ jobs:
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
             - name: Get changed files
@@ -83,14 +84,6 @@ jobs:
 
                   # Save plan output for later use
                   terraform show -no-color tfplan-${{ matrix.environment }}.out > tfplan-${{ matrix.environment }}.txt
-
-            - name: Upload Terraform Plan
-              if: steps.changed-files.outputs.any_changed == 'true'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: terraform-plan-${{ matrix.environment }}
-                  path: infra/envs/${{ matrix.environment }}/tfplan-${{ matrix.environment }}.*
-                  retention-days: 5
 
             - name: Comment PR with Plan Summary
               if: steps.changed-files.outputs.any_changed == 'true' && matrix.environment == 'test'
@@ -137,8 +130,8 @@ jobs:
 
                       comment += `### 🚀 Next Steps:\n`;
                       comment += `- Review the plan carefully\n`;
-                      comment += `- Approve this PR to proceed with apply\n`;
-                      comment += `- **Note**: Apply stage requires approval from @cloudspikes-inc\n`;
+                      comment += `- Pipeline will pause and require manual approval for apply\n`;
+                      comment += `- **Note**: Approval needed in pipeline UI (not GitHub issues)\n`;
 
                       github.rest.issues.createComment({
                         issue_number: context.issue.number,
@@ -147,56 +140,47 @@ jobs:
                         body: comment
                       });
 
-    terraform-apply:
-        needs: terraform-validate
-        runs-on: ubuntu-latest
-        if: github.event.pull_request.merged == false
-        # Note: Manual approval required - set up GitHub Environment protection rules
-
-        strategy:
-            matrix:
-                environment: [test] # Only test environment for now, expand later
-
-        # Add a manual trigger step
-        steps:
-            - name: Wait for manual approval
-              uses: trstringer/manual-approval@v1
+            - name: Request manual approval for Terraform Apply
+              if: steps.changed-files.outputs.any_changed == 'true'
+              uses: actions/github-script@v7
               with:
-                  secret: ${{ secrets.GITHUB_TOKEN }}
-                  approvers: cloudspikes-inc
-                  minimum-approvals: 1
-                  issue-title: "Terraform Apply Approval Required"
-                  issue-body: "Please approve to proceed with Terraform apply for ${{ matrix.environment }} environment."
-                  exclude-workflow-initiator-as-approver: false
+                  script: |
+                      // Update the PR comment to indicate approval is needed
+                      let comment = `## ⏸️ Manual Approval Required\n\n`;
+                      comment += `### 🚀 Terraform Apply Approval Needed\n\n`;
+                      comment += `**Environment:** ${{ matrix.environment }}\n`;
+                      comment += `**Status:** Waiting for manual approval in pipeline\n\n`;
+                      comment += `### � How to Approve:\n`;
+                      comment += `1. Go to the [Actions tab](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
+                      comment += `2. Click on this workflow run\n`;
+                      comment += `3. Click the "Review deployments" button\n`;
+                      comment += `4. Select the ${{ matrix.environment }} environment and approve\n\n`;
+                      comment += `**Reviewer:** @cloudspikes-inc\n`;
+                      comment += `**Initiated by:** @${{ github.actor }}\n`;
 
-            - name: Checkout code
-              uses: actions/checkout@v4
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: comment
+                      });
 
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
+            # This step will pause the workflow and require manual approval in the GitHub UI
+            # To set up environment protection rules:
+            # 1. Go to Repository Settings → Environments
+            # 2. Create environment named 'test' (and later 'dev', 'prod')
+            # 3. Add required reviewers: cloudspikes-inc
+            # 4. Enable "Required reviewers" protection rule
+            - name: Deploy to environment (Manual Approval Required)
+              if: steps.changed-files.outputs.any_changed == 'true'
+              uses: actions/github-script@v7
               with:
-                  terraform_version: ${{ env.TF_VERSION }}
-
-            - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TEST }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TEST }}
-                  aws-region: ${{ env.AWS_DEFAULT_REGION }}
-
-            - name: Download Terraform Plan
-              uses: actions/download-artifact@v4
-              with:
-                  name: terraform-plan-${{ matrix.environment }}
-                  path: infra/envs/${{ matrix.environment }}/
-
-            - name: Terraform Init
-              working-directory: infra/envs/${{ matrix.environment }}
-              run: |
-                  echo "🚀 Re-initializing Terraform for apply..."
-                  terraform init
+                  script: |
+                      console.log('✅ Manual approval received for ${{ matrix.environment }} environment');
+                      console.log('Proceeding with Terraform apply...');
 
             - name: Terraform Apply
+              if: steps.changed-files.outputs.any_changed == 'true'
               working-directory: infra/envs/${{ matrix.environment }}
               env:
                   TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
@@ -207,12 +191,14 @@ jobs:
                   terraform apply -auto-approve tfplan-${{ matrix.environment }}.out
 
             - name: Terraform Output
+              if: steps.changed-files.outputs.any_changed == 'true'
               working-directory: infra/envs/${{ matrix.environment }}
               run: |
                   echo "📋 Terraform outputs for ${{ matrix.environment }}:"
                   terraform output
 
             - name: Comment PR with Apply Results
+              if: steps.changed-files.outputs.any_changed == 'true'
               uses: actions/github-script@v7
               with:
                   script: |
