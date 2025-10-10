@@ -149,11 +149,16 @@ jobs:
 
             - name: Await CODEOWNERS Approval for Apply
               if: steps.changed-files.outputs.any_changed == 'true'
-              uses: trstringer/manual-approval@v1
+              uses: actions/pause@v1
               with:
-                  approvers: dinesh-bhagdev-csi,cloudspikes-inc,Trisumit
-                  minimum-approvals: 1
-                  secret: ${{ secrets.GITHUB_TOKEN }}
+                  approvers: |
+                      dinesh-bhagdev-csi
+                      cloudspikes-inc
+                      Trisumit
+                  instructions: |
+                      Terraform apply is ready for ${{ matrix.environment }}.
+                      A CODEOWNER must approve to proceed.
+                  timeout-minutes: 1440
 
             - name: Terraform Apply
               if: steps.changed-files.outputs.any_changed == 'true'
