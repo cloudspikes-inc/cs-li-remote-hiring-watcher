@@ -8,6 +8,6 @@ secret_name_test = "cs-linkedin-scanner-slack-webhook-url-test"
 description_test = "Slack webhook URL for LinkedIn Scanner job alerts"
 project_tag_test = "linkedin-scanner"
 purpose_tag_test = "slack-integration-test"
-# slack_webhook_url_test will be provided via slack_webhook_url_test environment variable
+# slack_webhook_url_test will be provided via TF_VAR_slack_webhook_url_test environment variable
 environment_test = "test"
 

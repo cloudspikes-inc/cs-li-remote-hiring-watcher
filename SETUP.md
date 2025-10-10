@@ -21,7 +21,8 @@
 Instead of using terraform.tfvars, you can also set environment variables:
 
 ```bash
-export slack_webhook_url_test="your-webhook-url"
+export TF_VAR_slack_webhook_url_test="your-webhook-url"
+export TF_VAR_region="ap-south-1"
 # ... other variables
 ```
 

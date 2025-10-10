@@ -69,7 +69,7 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: infra/envs/${{ matrix.environment }}
         env:
-          slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
           # TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
           # TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
         run: |
@@ -185,7 +185,7 @@ jobs:
       - name: Terraform Apply
         working-directory: infra/envs/${{ matrix.environment }}
         env:
-          slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
           TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
           TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
         run: |
