@@ -144,7 +144,7 @@ jobs:
 
   terraform-apply:
     needs: terraform-operations
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     environment: ${{ matrix.environment }} # 👈 Secure environment gate
     
