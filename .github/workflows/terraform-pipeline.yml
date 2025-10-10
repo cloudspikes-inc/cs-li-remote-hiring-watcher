@@ -69,9 +69,9 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: infra/envs/${{ matrix.environment }}
         env:
-          TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
-          TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
-          TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
+          slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          # TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+          # TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
         run: |
           echo "📋 Creating Terraform plan for ${{ matrix.environment }}..."
           terraform plan -out=tfplan-${{ matrix.environment }}.out
@@ -185,7 +185,7 @@ jobs:
       - name: Terraform Apply
         working-directory: infra/envs/${{ matrix.environment }}
         env:
-          TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
           TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
           TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
         run: |
