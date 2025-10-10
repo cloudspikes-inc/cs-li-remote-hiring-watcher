@@ -4,11 +4,11 @@ variable "region" {
   default     = "ap-south-1"
 }
 
-variable "aws_profile" {
-  description = "AWS profile for test environment"
-  type        = string
-  default     = "default"
-}
+# variable "aws_profile" {
+#   description = "AWS profile for test environment"
+#   type        = string
+#   default     = "default"
+# }
 
 variable "aws_profile_test" {
   description = "AWS profile for test environment"

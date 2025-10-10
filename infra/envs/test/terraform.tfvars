@@ -1,6 +1,6 @@
 # Common values for Providers(Some values can be reused in multiple environments)
 region      = "ap-south-1"
-aws_profile = "default"
+# aws_profile = "default"
 
 #AWS_SM
 aws_profile_test = "default"
