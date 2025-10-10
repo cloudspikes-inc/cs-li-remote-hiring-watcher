@@ -1,7 +1,7 @@
 module "aws_sm_test" {
   source = "../../modules/aws-sm"
 
-  region            = var.region
+  region = var.region
   # aws_profile       = var.aws_profile_test
   secret_name       = var.secret_name_test
   description       = var.description_test
