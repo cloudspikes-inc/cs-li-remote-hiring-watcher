@@ -16,25 +16,29 @@ The Terraform pipeline requires **GitHub Environment Protection Rules** to enfor
 ### 2. Configure Environment Protection Rules
 
 **Required Reviewers:**
+
 - ✅ Enable **"Required reviewers"**
 - Add reviewers: `cloudspikes-inc` (or individual CODEOWNER usernames)
 - Set minimum approvals: `1`
 
 **Deployment Branches (Optional but Recommended):**
+
 - ✅ Enable **"Deployment branches"**
 - Add rule: `main`
-- Add rule: `develop` 
+- Add rule: `develop`
 - Add rule: `feature/*`
 
 ### 3. How It Works
 
 **Before Setup (Current Issue):**
-```
+
+```text
 terraform-plan → terraform-apply (runs automatically) ❌
 ```
 
 **After Setup (Correct Behavior):**
-```
+
+```text
 terraform-plan → terraform-apply (⏸️ waits for approval) → ✅ manual approval → continues
 ```
 
@@ -68,6 +72,7 @@ After setup, test the pipeline:
 ### 7. CODEOWNERS Integration
 
 The environment reviewers should match your CODEOWNERS file:
+
 - If CODEOWNERS has `@cloudspikes-inc`, add `cloudspikes-inc` as reviewer
 - If CODEOWNERS has individual users, add those specific users
 
@@ -75,6 +80,7 @@ The environment reviewers should match your CODEOWNERS file:
 
 **Q: Pipeline still runs automatically?**
 A: Environment not configured correctly. Double-check:
+
 - Environment name exactly matches: `test`
 - Required reviewers enabled and configured
 - Reviewers have proper permissions

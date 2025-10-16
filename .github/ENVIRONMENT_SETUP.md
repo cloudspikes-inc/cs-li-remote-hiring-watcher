@@ -10,7 +10,7 @@ The Terraform pipeline uses GitHub Environments with protection rules to provide
 
 Navigate to your repository settings and create the following environments:
 
-**Repository Settings → Environments → New Environment**
+#### Repository Settings → Environments → New Environment
 
 - `test` (for test environment)
 - `dev` (for dev environment - future use)
