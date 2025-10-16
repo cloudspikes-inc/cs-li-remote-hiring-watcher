@@ -18,7 +18,7 @@
                 "arn:aws:dynamodb:*:*:table/clean_jobs",
                 "arn:aws:dynamodb:*:*:table/job_stats"
             ]
-        }
+        },
         {
             "Effect": "Allow",
             "Action": [
