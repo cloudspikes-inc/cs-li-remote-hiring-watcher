@@ -3,19 +3,6 @@ variable "region" {
   type        = string
   default     = "ap-south-1"
 }
-
-# variable "aws_profile" {
-#   description = "AWS profile for test environment"
-#   type        = string
-#   default     = "default"
-# }
-
-# variable "aws_profile_test" {
-#   description = "AWS profile for test environment"
-#   type        = string
-#   default     = "default"
-# }
-
 variable "secret_name_test" {
   description = "Name of the secret in AWS Secrets Manager"
   type        = string

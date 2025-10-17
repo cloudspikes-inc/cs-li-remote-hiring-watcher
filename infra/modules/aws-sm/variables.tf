@@ -3,11 +3,6 @@ variable "region" {
   type        = string
 }
 
-# variable "aws_profile" {
-#   description = "AWS profile to use"
-#   type        = string
-# }
-
 variable "secret_name" {
   description = "Name of the secret"
   type        = string
