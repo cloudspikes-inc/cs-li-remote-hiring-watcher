@@ -53,8 +53,18 @@ class CodeCatcher(BaseHTTPRequestHandler):
         self.wfile.write(body.encode("utf-8"))
 
 
+# Add debug info to see what's happening
 def build_auth_url(client_id, redirect_uri, state, scopes):
-    return "{AUTH_URL}?{urlencode({'response_type': 'code', 'client_id': client_id, 'redirect_uri': redirect_uri, 'state': state, 'scope': scopes})}"
+    params = {
+        "response_type": "code",
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "state": state,
+        "scope": scopes,
+    }
+    url = f"{AUTH_URL}?{urlencode(params)}"
+    print(f"[DEBUG] Auth URL: {url}", file=sys.stderr)  # Add this line
+    return url
 
 
 def exchange_code_for_token(client_id, client_secret, redirect_uri, code):
@@ -68,7 +78,7 @@ def exchange_code_for_token(client_id, client_secret, redirect_uri, code):
     r = requests.post(TOKEN_URL, data=data, timeout=30)
     body = r.json()
     if r.status_code != 200 or "access_token" not in body:
-        sys.exit("Token exchange failed: {body}")
+        sys.exit(f"Token exchange failed: {body}")  # Fix f-string
     return body
 
 
@@ -116,14 +126,13 @@ def main():
     # Pretty info goes to stderr so eval ignores it
     print("\n[INFO] Access token fetched successfully!", file=sys.stderr)
     print(
-        "[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)",
+        f"[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)",  # Fix f-string
         file=sys.stderr,
     )
-    print("[INFO] Expires on: {expiry_str}\n", file=sys.stderr)
+    print(f"[INFO] Expires on: {expiry_str}\n", file=sys.stderr)  # Fix f-string
 
     # Plain export only (stdout)
-    print("export LI_TOKEN='{access_token}'")
-
+    print(f"export LI_TOKEN='{access_token}'")  # Fix f-string
 
 if __name__ == "__main__":
     main()
