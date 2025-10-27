@@ -31,7 +31,8 @@ class CodeCatcher(BaseHTTPRequestHandler):
 
         qs = parse_qs(url.query)
         if "error" in qs:
-            CodeCatcher.result["error"] = qs.get("error_description", qs["error"])[0]
+            CodeCatcher.result["error"] = qs.get(
+                "error_description", qs["error"])[0]
             self._send(400, "Error")
             CodeCatcher.done_event.set()
             return
@@ -99,7 +100,8 @@ def main():
     server = HTTPServer(("localhost", args.port), CodeCatcher)
     threading.Thread(target=server.handle_request, daemon=True).start()
 
-    auth_url = build_auth_url(args.client_id, args.redirect_uri, state, args.scopes)
+    auth_url = build_auth_url(
+        args.client_id, args.redirect_uri, state, args.scopes)
     webbrowser.open(auth_url)
     print(
         "[INFO] Browser opened for LinkedIn consent. Waiting for redirect...",
@@ -126,13 +128,16 @@ def main():
     # Pretty info goes to stderr so eval ignores it
     print("\n[INFO] Access token fetched successfully!", file=sys.stderr)
     print(
-        f"[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)",  # Fix f-string
+        # Fix f-string
+        f"[INFO] Valid for: {expires_in:,} seconds (~{expires_in/86400:.1f} days)",
         file=sys.stderr,
     )
-    print(f"[INFO] Expires on: {expiry_str}\n", file=sys.stderr)  # Fix f-string
+    print(f"[INFO] Expires on: {expiry_str}\n",
+          file=sys.stderr)  # Fix f-string
 
     # Plain export only (stdout)
     print(f"export LI_TOKEN='{access_token}'")  # Fix f-string
+
 
 if __name__ == "__main__":
     main()
