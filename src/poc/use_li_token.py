@@ -35,7 +35,8 @@ if r.status_code == 401:
 try:
     body = r.json()
 except Exception:
-    print("Non-JSON response:", r.text[:400], file=sys.stderr)
+    print("Non-JSON response:",
+          r.text[:400], file=sys.stderr)
     sys.exit(3)
 
 print(json.dumps(body, indent=2))
