@@ -8,6 +8,21 @@ on:
       - main
       - develop
       - 'feature/**'
+  workflow_dispatch:
+    inputs:
+      destroy_environment:
+        description: 'Environment to destroy (test/dev/prod)'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+          - test
+          - dev
+          - prod
+      confirm_destroy:
+        description: 'Type "DESTROY" to confirm infrastructure destruction'
+        required: true
+        type: string
 
 env:
   TF_VERSION: '1.6.0'
@@ -219,3 +234,106 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
+
+  terraform-destroy:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm_destroy == 'DESTROY'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.destroy_environment }}-destroy # Separate environment gate for destroy operations
+    
+    concurrency: terraform-destroy-${{ github.event.inputs.destroy_environment }}
+    
+    steps:
+      - name: Validate Destroy Input
+        run: |
+          if [[ "${{ github.event.inputs.confirm_destroy }}" != "DESTROY" ]]; then
+            echo "❌ Destroy confirmation failed. You must type 'DESTROY' exactly to proceed."
+            exit 1
+          fi
+          echo "✅ Destroy confirmation validated"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ github.event.inputs.destroy_environment == 'test' && secrets.AWS_ACCESS_KEY_ID_TEST || github.event.inputs.destroy_environment == 'dev' && secrets.AWS_ACCESS_KEY_ID_DEV || secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ github.event.inputs.destroy_environment == 'test' && secrets.AWS_SECRET_ACCESS_KEY_TEST || github.event.inputs.destroy_environment == 'dev' && secrets.AWS_SECRET_ACCESS_KEY_DEV || secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Terraform Init
+        working-directory: infra/envs/${{ github.event.inputs.destroy_environment }}
+        run: |
+          echo "🚀 Initializing Terraform for destroy operation..."
+          terraform init
+
+      - name: Terraform Plan Destroy
+        working-directory: infra/envs/${{ github.event.inputs.destroy_environment }}
+        env:
+          TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+          TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
+        run: |
+          echo "📋 Creating Terraform destroy plan for ${{ github.event.inputs.destroy_environment }}..."
+          terraform plan -destroy -out=tfplan-destroy-${{ github.event.inputs.destroy_environment }}.out
+          
+          # Save destroy plan output for review
+          terraform show -no-color tfplan-destroy-${{ github.event.inputs.destroy_environment }}.out > tfplan-destroy-${{ github.event.inputs.destroy_environment }}.txt
+
+      - name: Review Destroy Plan
+        working-directory: infra/envs/${{ github.event.inputs.destroy_environment }}
+        run: |
+          echo "🔍 Reviewing what will be destroyed..."
+          echo "==================== DESTROY PLAN ===================="
+          cat tfplan-destroy-${{ github.event.inputs.destroy_environment }}.txt
+          echo "======================================================"
+          echo ""
+          echo "⚠️  WARNING: The above resources will be PERMANENTLY DESTROYED!"
+          echo "⚠️  This action is IRREVERSIBLE!"
+          echo ""
+
+      - name: Terraform Destroy
+        working-directory: infra/envs/${{ github.event.inputs.destroy_environment }}
+        env:
+          TF_VAR_slack_webhook_url_test: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
+          TF_VAR_slack_webhook_url_dev: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+          TF_VAR_slack_webhook_url_prod: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
+        run: |
+          echo "🔥 DESTROYING Terraform infrastructure for ${{ github.event.inputs.destroy_environment }}..."
+          echo "⚠️  Last chance to cancel - infrastructure will be destroyed in 10 seconds..."
+          sleep 10
+          terraform apply -auto-approve tfplan-destroy-${{ github.event.inputs.destroy_environment }}.out
+
+      - name: Verify Destruction
+        working-directory: infra/envs/${{ github.event.inputs.destroy_environment }}
+        run: |
+          echo "🔍 Verifying infrastructure destruction..."
+          echo "Remaining resources (should be empty):"
+          terraform state list || echo "✅ No resources remain - destruction complete"
+
+      - name: Create Destroy Summary
+        if: always()
+        run: |
+          echo "## 🔥 Terraform Destroy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.destroy_environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "### ✅ Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "Infrastructure has been successfully destroyed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Status: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Infrastructure destruction encountered errors. Please review the logs." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚠️  Important Notes:" >> $GITHUB_STEP_SUMMARY
+          echo "- This action is irreversible" >> $GITHUB_STEP_SUMMARY
+          echo "- All data in the destroyed environment is permanently lost" >> $GITHUB_STEP_SUMMARY
+          echo "- Verify that this was the intended action" >> $GITHUB_STEP_SUMMARY
