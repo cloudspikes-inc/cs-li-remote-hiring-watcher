@@ -238,7 +238,7 @@ jobs:
   terraform-destroy:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm_destroy == 'DESTROY'
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.destroy_environment }}-destroy # Separate environment gate for destroy operations
+    environment: ${{ github.event.inputs.destroy_environment }} # Same environment gate as apply for consistent approval
     
     concurrency: terraform-destroy-${{ github.event.inputs.destroy_environment }}
     
