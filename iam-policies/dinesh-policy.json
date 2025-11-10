@@ -71,6 +71,14 @@
       "Resource": "*"
     },
     {
+      "Sid": "TaggingFullAccess",
+      "Effect": "Allow",
+      "Action": [
+        "tag:*"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "BillingAndCostExplorerAccess",
       "Effect": "Allow",
       "Action": [
