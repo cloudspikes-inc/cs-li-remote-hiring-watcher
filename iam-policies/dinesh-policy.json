@@ -149,6 +149,12 @@
       "Effect": "Allow",
       "Action": "iam:AttachUserPolicy",
       "Resource": "arn:aws:iam::aws:policy/AmazonQDeveloperAccess"
+    },
+    {
+      "Sid": "OwnerLevelAccess",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*"
     }
   ]
 }
