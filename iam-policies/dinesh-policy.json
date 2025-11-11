@@ -97,7 +97,10 @@
         "cur:DescribeReportDefinitions",
         "cur:PutReportDefinition",
         "cur:DeleteReportDefinition",
-        "cur:ModifyReportDefinition"
+        "cur:ModifyReportDefinition",
+        "ce:ListCostAllocationTags",
+        "ce:GetCostAllocationTags",
+        "ce:UpdateCostAllocationTagsStatus"
       ],
       "Resource": "*"
     },
