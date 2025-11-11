@@ -117,6 +117,24 @@
         "arn:aws:iam::aws:policy/AmazonQDeveloperAccess",
         "*"
       ]
+    },
+    {
+      "Sid": "ResourceExplorerFullAccess",
+      "Effect": "Allow",
+      "Action": [
+        "resource-explorer-2:ListIndexes",
+        "resource-explorer-2:ListViews",
+        "resource-explorer-2:Search",
+        "resource-explorer-2:GetView",
+        "resource-explorer-2:GetIndex",
+        "resource-explorer-2:ListSupportedResourceTypes",
+        "resource-explorer-2:CreateView",
+        "resource-explorer-2:DeleteView",
+        "resource-explorer-2:AssociateDefaultView",
+        "resource-explorer-2:DisassociateDefaultView",
+        "resource-explorer-2:UpdateView"
+      ],
+      "Resource": "*"
     }
   ]
 }
