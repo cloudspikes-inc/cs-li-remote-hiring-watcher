@@ -92,7 +92,6 @@
         "account:*",
         "purchase-orders:*",
         "tax:*",
-        "payment-terms:*",
         "billingconductor:*"
       ],
       "Resource": "*"
