@@ -43,17 +43,13 @@
       "Resource": "arn:aws:secretsmanager:*:*:secret:slack/recruiter-insights-ops-webhook-*"
     },
     {
-      "Sid": "SNSAccessForCostAlerts",
+      "Sid": "AllowBudgetManagement",
       "Effect": "Allow",
       "Action": [
-        "sns:CreateTopic",
-        "sns:Subscribe",
-        "sns:Publish",
-        "sns:GetTopicAttributes",
-        "sns:SetTopicAttributes",
-        "sns:ListTopics"
+        "budgets:ModifyBudget",
+        "budgets:ViewBudget"
       ],
-      "Resource": "*"
+      "Resource": "arn:aws:budgets::*:budget/*"
     },
     {
       "Sid": "KmsAccessForSecretsEncryption",
@@ -159,6 +155,17 @@
         "cur:ModifyReportDefinition"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "CostAlertsSnsTopicManagement",
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:SetTopicAttributes",
+        "sns:Subscribe",
+        "sns:ListSubscriptionsByTopic"
+      ],
+      "Resource": "arn:aws:sns:ap-south-1:615311846444:recruiter-insights-cost-alerts"
     },
     {
       "Sid": "DiscoveryListOnly",
